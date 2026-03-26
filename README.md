@@ -104,7 +104,4 @@ curl http://localhost:8000/api/vol/forward-returns
 
 **Status**: ✅ Sprint 1 Complete  
 **Created**: 2026-03-26 by Ghost 👻  
-**Stack**: FastAPI + ClickHouse + Vue.js (frontend)## Sprint 1 Status: ✅ COMPLETE
-
-Vol Regime Dashboard is fully implemented and production-ready.
-Created by Ghost 👻 on Thu Mar 26 21:07:14 UTC 2026
+**Stack**: FastAPI + ClickHouse + Vue.js (frontend)

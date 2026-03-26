@@ -50,25 +50,25 @@ def generate_cockpit_setups() -> list:
 # Derivatives setups (backward-compatible with Sprint 3)
 # ============================================================
 
-def generate_derivatives_setups(*, vix=None, move=None, btc_price=None) -> list:
+def generate_derivatives_setups(*, vix=None, move=None, structure=None) -> list:
     """Generate top 3 setups for the derivatives universe.
 
     Accepts optional pre-fetched quotes to avoid redundant API calls
     when called from recompute_desk_note().
     """
     try:
-        if vix is None or move is None:
+        if vix is None or move is None or structure is None:
             from services.derivatives_service import get_vol_summary
             vol = get_vol_summary()
             if vix is None:
                 vix = vol["vix"]
             if move is None:
                 move = vol["move"]
+            if structure is None:
+                structure = vol["structure"]
             ratio = vol["ratio"]
-            structure = vol["structure"]
         else:
             ratio = round(vix / move, 3) if move else 0
-            structure = "Unknown"
     except Exception as e:
         logging.warning(f"Error fetching vol data for setups: {e}")
         vix, move, ratio, structure = 20, 100, 0.2, "Unknown"

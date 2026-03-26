@@ -149,7 +149,7 @@ def recompute_desk_note() -> dict:
         "rates": get_rates(),
         "vol": vol,
         "crypto": crypto,
-        "setups": generate_derivatives_setups(vix=vix, move=move, btc_price=btc_price),
+        "setups": generate_derivatives_setups(vix=vix, move=move, structure=vol["structure"]),
         "macroContext": {},
         "timestamp": datetime.now().isoformat(),
     }
@@ -168,7 +168,10 @@ def _compute_qtd(yf_symbol: str, current_price: float, anchor_date: str) -> floa
     try:
         import yfinance as yf
         ticker = yf.Ticker(yf_symbol)
-        hist = ticker.history(start=anchor_date, end=anchor_date.replace("-01", "-03"))
+        from datetime import timedelta, datetime as dt
+        start = dt.strptime(anchor_date, "%Y-%m-%d")
+        end = start + timedelta(days=5)
+        hist = ticker.history(start=anchor_date, end=end.strftime("%Y-%m-%d"))
         if not hist.empty:
             anchor = float(hist["Close"].iloc[0])
             if anchor:

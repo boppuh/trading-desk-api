@@ -138,6 +138,14 @@ CREATE TABLE IF NOT EXISTS desk_notes (
 ) ENGINE = ReplacingMergeTree() ORDER BY trade_date
 """
 
+TABLES["gex_levels"] = """
+CREATE TABLE IF NOT EXISTS gex_levels (
+    date Date, underlying String, strike Float64,
+    call_gex Float64, put_gex Float64, net_gex Float64,
+    call_wall UInt8, put_wall UInt8, zero_gamma UInt8
+) ENGINE = ReplacingMergeTree() ORDER BY (date, underlying, strike)
+"""
+
 def create_all_tables():
     """Run this once to create all tables."""
     from db import get_client

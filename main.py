@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from scheduler import start_scheduler, stop_scheduler
-from routers import vol_regime
+from routers import vol_regime, premarket, energy
 from config import settings
 import logging
 
@@ -25,6 +25,25 @@ app.add_middleware(
 )
 
 app.include_router(vol_regime.router, prefix="/api/vol", tags=["Vol Regime"])
+app.include_router(premarket.router, prefix="/api/premarket", tags=["Premarket"])
+app.include_router(energy.router, prefix="/api/energy", tags=["Energy"])
+
+@app.post("/api/pipeline/run")
+async def run_pipeline(body: dict):
+    name = body.get("pipeline", "")
+    pipelines = {}
+    if name == "energy":
+        from pipelines.energy_pipeline import run_energy_pipeline
+        run_energy_pipeline()
+    elif name == "premarket":
+        from pipelines.premarket_pipeline import run_premarket_pipeline
+        run_premarket_pipeline()
+    elif name == "close":
+        from pipelines.close_pipeline import run_close_pipeline
+        run_close_pipeline()
+    else:
+        return {"error": f"Unknown pipeline: {name}"}
+    return {"status": "ok", "pipeline": name}
 
 @app.get("/health")
 async def health():

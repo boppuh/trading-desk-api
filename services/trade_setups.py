@@ -4,7 +4,7 @@ Cockpit: Four templates — Pin Fade, Long Vol, Iron Condor, Momentum Breakout. 
 Derivatives: Rate vol, VIX futures, DXY setups based on current regime.
 """
 import logging
-from services.market_data import get_quote, get_quotes_batch
+from services.market_data import get_quotes_batch
 
 # ============================================================
 # Cockpit setups (Pin Fade, Long Vol, Momentum Breakout)
@@ -33,8 +33,8 @@ def generate_cockpit_setups() -> list:
         if pin_score >= 60:
             candidates.append(_build_pin_fade(ticker, spot, max_pain, call_wall, put_wall, pin_score))
 
-        # Long Vol
-        lv_score = _score_long_vol(50, gamma_regime, 1e9)
+        # Long Vol (iv_rank stubbed at 5 until options data available)
+        lv_score = _score_long_vol(5 if gamma_regime == "Negative" else 50, gamma_regime, 1e9)
         if lv_score >= 60:
             candidates.append(_build_long_vol(ticker, spot, lv_score))
 

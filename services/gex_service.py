@@ -140,6 +140,6 @@ def _scan_ticker(ticker, quote, dp_tickers) -> tuple:
     elif chg > 1.5:
         score += 10
 
-    signal = signals if signals else "Watch"
+    signal = " + ".join(signals) if signals else "Watch"
     reason = " + ".join(reason_parts) if reason_parts else "No unusual activity"
     return score, signal, reason

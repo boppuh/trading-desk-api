@@ -5,14 +5,19 @@ Produces directional trade ideas based on current market conditions.
 import logging
 from services.market_data import get_quote
 
-def generate_derivatives_setups() -> list:
-    """Generate trade setups for the derivatives desk note."""
+def generate_derivatives_setups(*, vix=None, move=None, btc_price=None) -> list:
+    """Generate trade setups for the derivatives desk note.
+
+    Accepts optional pre-fetched quotes to avoid redundant API calls
+    when called from recompute_desk_note().
+    """
     setups = []
 
-    # Rates setup based on VIX/MOVE relationship
     try:
-        vix = get_quote("^VIX")["price"]
-        move = get_quote("^MOVE")["price"]
+        if vix is None:
+            vix = get_quote("^VIX")["price"]
+        if move is None:
+            move = get_quote("^MOVE")["price"]
 
         if vix < 15 and move < 90:
             setups.append({
@@ -31,8 +36,9 @@ def generate_derivatives_setups() -> list:
             })
 
         # Crypto basis trade
-        btc = get_quote("BTC-USD")["price"]
-        if btc > 0:
+        if btc_price is None:
+            btc_price = get_quote("BTC-USD")["price"]
+        if btc_price > 0:
             setups.append({
                 "instrument": "BTC", "direction": "Long basis",
                 "thesis": "CME-spot basis annualizing >8% — carry trade opportunity",

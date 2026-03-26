@@ -7,7 +7,7 @@ import db
 router = APIRouter()
 
 @router.get("/full")
-async def get_full_briefing():
+def get_full_briefing():
     regime = vol_regime_service.get_latest_regime()
     fear = fear_service.get_premarket_fear()
     quotes = get_quotes_batch(WATCHLIST_25)
@@ -26,15 +26,15 @@ async def get_full_briefing():
     }
 
 @router.get("/regime")
-async def get_regime():
+def get_regime():
     return vol_regime_service.get_latest_regime()
 
 @router.get("/fear")
-async def get_fear():
+def get_fear():
     return fear_service.get_fear_gauges()
 
 @router.get("/universe")
-async def get_universe():
+def get_universe():
     quotes = get_quotes_batch(WATCHLIST_25)
     return [
         {"symbol": t, "price": q.get("price", 0), "change": q.get("change", 0),
@@ -43,11 +43,11 @@ async def get_universe():
     ]
 
 @router.get("/calendar")
-async def get_calendar():
+def get_calendar():
     return _query_calendar()
 
 @router.get("/earnings")
-async def get_earnings():
+def get_earnings():
     return _query_earnings()
 
 def _query_calendar():

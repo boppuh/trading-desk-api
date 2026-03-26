@@ -5,19 +5,19 @@ import db
 router = APIRouter()
 
 @router.get("/commodities")
-async def get_commodities():
+def get_commodities():
     return energy_service.get_commodity_strip()
 
 @router.get("/watchlist")
-async def get_watchlist():
+def get_watchlist():
     return energy_service.get_watchlist()
 
 @router.get("/exposure")
-async def get_exposure():
+def get_exposure():
     return energy_service.score_exposure()
 
 @router.get("/shocks")
-async def get_shocks():
+def get_shocks():
     rows = db.execute(
         "SELECT timestamp, headline, severity, severity_color, summary, "
         "affected_tickers, source_url, tags "
@@ -31,7 +31,7 @@ async def get_shocks():
     ]
 
 @router.get("/hormuz")
-async def get_hormuz():
+def get_hormuz():
     rows = db.execute(
         "SELECT date, transit_count, vessels_trapped, attacks_mtd, status "
         "FROM hormuz_transits FINAL ORDER BY date DESC LIMIT 30"

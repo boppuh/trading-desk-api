@@ -4,7 +4,7 @@ Energy dashboard service — commodity quotes, crack spreads, exposure scoring.
 import logging
 from datetime import datetime
 from services.market_data import get_quotes_batch
-from config import settings, ENERGY_TICKERS
+from config import ENERGY_TICKERS
 import db
 
 COMMODITY_SYMBOLS = {
@@ -40,7 +40,7 @@ def get_commodity_strip() -> list:
             "changePct": f"{q['change_pct']:+.2f}%", "positive": q["change"] >= 0,
             "sparkline": _get_sparkline(sym),
         })
-    # Add crack spread
+    # Add crack spread as a synthetic entry
     result.append({
         "name": "3-2-1 Crack Spread", "symbol": "CRACK",
         "price": f"${crack_321:.2f}", "change": "$0.00", "changePct": "+0.00%",
@@ -112,6 +112,6 @@ def _get_sparkline(symbol: str, days=5) -> list:
             "ORDER BY timestamp DESC LIMIT %(d)s",
             {"s": symbol, "d": days}
         )
-        return [float(r) for r in reversed(rows)] if rows else []
+        return [float(r[0]) for r in reversed(rows)] if rows else []
     except Exception:
         return []

@@ -2,12 +2,10 @@
 Fear & macro gauge service. Shared between premarket and cockpit dashboards.
 Sources: FMP (VIX, MOVE), FRED (HY OAS), CNN Money (Fear & Greed), AAII, NAAIM
 """
-import httpx, json, re
+import httpx
 import logging
 from config import settings
 from services.market_data import get_quote
-import db
-from datetime import date
 
 def get_fear_gauges() -> list:
     """Returns 7 fear gauge dicts matching cockpitData.fearGauges shape."""
@@ -93,7 +91,7 @@ def _fetch_hy_oas() -> float:
             timeout=5
         )
         obs = r.json()["observations"]
-        return float(obs["value"]) if obs else 312.0
+        return float(obs[0]["value"]) if obs else 312.0
     except Exception:
         return 312.0
 

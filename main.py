@@ -1,6 +1,8 @@
+import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from scheduler import start_scheduler, stop_scheduler
 from routers import vol_regime, premarket, energy
 from config import settings
@@ -28,19 +30,21 @@ app.include_router(vol_regime.router, prefix="/api/vol", tags=["Vol Regime"])
 app.include_router(premarket.router, prefix="/api/premarket", tags=["Premarket"])
 app.include_router(energy.router, prefix="/api/energy", tags=["Energy"])
 
+class PipelineRequest(BaseModel):
+    pipeline: str
+
 @app.post("/api/pipeline/run")
-async def run_pipeline(body: dict):
-    name = body.get("pipeline", "")
-    pipelines = {}
+async def run_pipeline(body: PipelineRequest):
+    name = body.pipeline
     if name == "energy":
         from pipelines.energy_pipeline import run_energy_pipeline
-        run_energy_pipeline()
+        await asyncio.to_thread(run_energy_pipeline)
     elif name == "premarket":
         from pipelines.premarket_pipeline import run_premarket_pipeline
-        run_premarket_pipeline()
+        await asyncio.to_thread(run_premarket_pipeline)
     elif name == "close":
         from pipelines.close_pipeline import run_close_pipeline
-        run_close_pipeline()
+        await asyncio.to_thread(run_close_pipeline)
     else:
         return {"error": f"Unknown pipeline: {name}"}
     return {"status": "ok", "pipeline": name}

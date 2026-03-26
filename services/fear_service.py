@@ -18,11 +18,23 @@ def get_fear_gauges() -> list:
     hy_oas = _fetch_hy_oas()
 
     def color(name, value):
+        # For most gauges: low=green, mid=amber, high=red (higher = more stress)
+        # For Fear & Greed: scale is inverted (low=fear=red, high=greed=green)
+        # For VIX Term Spread: negative=backwardation=red, positive=contango=green
         thresholds = {
-            "VIX": (15, 25), "MOVE": (90, 120), "Fear & Greed": (40, 60),
+            "VIX": (15, 25), "MOVE": (90, 120),
+            "HY OAS": (300, 450),
             "AAII Bull%": (35, 55), "NAAIM Exp.": (50, 100),
-            "HY OAS": (300, 450), "VIX Term Sprd": (-1, 2),
         }
+        inverted = {
+            "Fear & Greed": (30, 50),      # <=30 extreme fear (red), >=50 neutral+ (green)
+            "VIX Term Sprd": (-1, 2),      # negative=backwardation (red), >2=contango (green)
+        }
+        if name in inverted:
+            lo, hi = inverted[name]
+            if value <= lo: return "red"
+            elif value <= hi: return "amber"
+            else: return "green"
         lo, hi = thresholds[name]
         if value <= lo: return "green"
         elif value <= hi: return "amber"

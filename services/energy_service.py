@@ -79,21 +79,25 @@ def score_exposure() -> list:
         item["rank"] = i
     return scored[:8]
 
+def _clamp(value, low, high):
+    """Clamp value to [low, high] range — caps both positive and negative."""
+    return max(low, min(value, high))
+
 def _exposure_score(sector, crack, wti, prev_crack=25.0, prev_wti=70.0) -> int:
     score = 50
     crack_change = crack - prev_crack
     wti_change = wti - prev_wti
     if sector in ("Services", "E&P"):
-        score += min(wti_change * 2, 25)
-        score += min(crack_change * 1.5, 15)
+        score += _clamp(wti_change * 2, -25, 25)
+        score += _clamp(crack_change * 1.5, -15, 15)
     elif sector == "Refining":
-        score += min(crack_change * 3, 30)
-        score -= min(wti_change, 15)
+        score += _clamp(crack_change * 3, -30, 30)
+        score -= _clamp(wti_change, -15, 15)
     elif sector == "Airlines":
-        score -= min(crack_change * 4, 40)
-        score -= min(wti_change * 2, 20)
+        score -= _clamp(crack_change * 4, -40, 40)
+        score -= _clamp(wti_change * 2, -20, 20)
     elif sector in ("Integrated", "Midstream"):
-        score += min(wti_change, 15)
+        score += _clamp(wti_change, -15, 15)
     return max(0, min(100, int(score)))
 
 def _exposure_thesis(ticker, sector, direction, crack, wti) -> str:

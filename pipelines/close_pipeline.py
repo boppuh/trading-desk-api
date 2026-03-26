@@ -29,7 +29,7 @@ def run_close_pipeline():
         # Store daily snapshot
         db.insert("daily_snapshots",
             [(today, price("spx"), price("qqq"), price("iwm"), price("dia"),
-              price("vix"), change_pct("vix"), regime.get("termStructure", {}).get("state", ""),
+              price("vix"), change_pct("vix"), "",  # term_structure from vol_regime_daily, not in regime dict
               0.0,  # put_call_ratio — requires separate data source
               price("hyg"), price("tlt"), price("uso"), price("gld"),
               regime.get("regime", ""), regime.get("regimeColor", ""),
@@ -45,7 +45,7 @@ def run_close_pipeline():
         vix_val = g.get("VIX", 0)
         db.insert("fear_snapshots",
             [(today, "close", vix_val, change_pct("vix"),
-              regime.get("termStructure", {}).get("state", ""),
+              "",  # term_structure_state
               g.get("MOVE", 0), g.get("HY OAS", 0),
               price("tlt"), price("uso"), price("gld"),
               g.get("Fear & Greed", 0), g.get("AAII Bull%", 0),

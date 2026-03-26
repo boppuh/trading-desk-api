@@ -131,6 +131,13 @@ CREATE TABLE IF NOT EXISTS exposure_rankings (
 ) ENGINE = ReplacingMergeTree() ORDER BY (timestamp, symbol)
 """
 
+TABLES["desk_notes"] = """
+CREATE TABLE IF NOT EXISTS desk_notes (
+    trade_date Date, scoreboard String, rates_data String, vol_data String,
+    crypto_data String, setups String, macro_context String, created_at DateTime DEFAULT now()
+) ENGINE = ReplacingMergeTree() ORDER BY trade_date
+"""
+
 def create_all_tables():
     """Run this once to create all tables."""
     from db import get_client

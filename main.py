@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from scheduler import start_scheduler, stop_scheduler
-from routers import vol_regime, premarket, energy
+from routers import vol_regime, premarket, energy, derivatives
 from config import settings
 import logging
 
@@ -29,6 +29,7 @@ app.add_middleware(
 app.include_router(vol_regime.router, prefix="/api/vol", tags=["Vol Regime"])
 app.include_router(premarket.router, prefix="/api/premarket", tags=["Premarket"])
 app.include_router(energy.router, prefix="/api/energy", tags=["Energy"])
+app.include_router(derivatives.router, prefix="/api/derivatives", tags=["Derivatives"])
 
 class PipelineRequest(BaseModel):
     pipeline: str

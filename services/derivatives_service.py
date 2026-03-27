@@ -134,7 +134,7 @@ def _compute_qtd(instrument_id: str, current_price: float, anchor_date: str) -> 
     """Quarter-to-date return vs. QTD anchor date close."""
     try:
         rows = db.execute(
-            "SELECT price FROM commodity_snapshots WHERE symbol=%(s)s AND toDate(timestamp)=%(d)s LIMIT 1",
+            "SELECT price FROM universe_snapshots WHERE symbol=%(s)s AND toDate(timestamp)=%(d)s LIMIT 1",
             {"s": instrument_id, "d": anchor_date}
         )
         if rows:
@@ -165,16 +165,7 @@ def _compute_curve_spread(short_series: str, long_series: str) -> str:
     return "N/A"
 
 def fetch_fedwatch() -> list:
-    """Parse CME FedWatch meeting probabilities."""
-    try:
-        httpx.get(
-            "https://www.cmegroup.com/CmeWS/mvc/ProductCalendar/Future/G/ZQ/1",
-            headers={"User-Agent": "Mozilla/5.0"}, timeout=10
-        )
-        # Returns approximate rate probabilities
-        # Stub return for reliability — replace with actual CME parse
-    except Exception:
-        pass
+    """FedWatch meeting probabilities — stub pending CME API integration."""
     return [
         {"meeting": "May '26", "hold": 82, "cut25": 16, "cut50": 2},
         {"meeting": "Jun '26", "hold": 61, "cut25": 33, "cut50": 6},

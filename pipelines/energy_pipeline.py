@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from services.energy_service import get_commodity_strip, get_watchlist, score_exposure
+from services.energy_service import get_commodity_strip, get_watchlist, score_exposure, calc_crack_spread
 from services.market_data import get_quotes_batch
 from scheduler import update_last_run
 import db
@@ -18,11 +18,8 @@ def run_energy_pipeline():
                   rows,
                   ["timestamp", "symbol", "price", "change", "pct_change", "open", "high", "low", "volume"])
 
-        # Compute and store crack spread
-        wti = quotes.get("CL=F", {}).get("price", 70)
-        ho  = quotes.get("HO=F", {}).get("price", 0) * 42
-        rb  = quotes.get("RB=F", {}).get("price", 0) * 42
-        crack = (2 * rb + 1 * ho - 3 * wti) / 3
+        # Compute and store crack spread using shared helper
+        crack, rb, ho, wti = calc_crack_spread(quotes)
         jet_crack = rb - wti   # RBOB (jet fuel proxy) minus crude
         diesel_crack = ho - wti  # Heating oil (diesel proxy) minus crude
         db.insert("crack_spreads", [(ts, crack, jet_crack, diesel_crack)],

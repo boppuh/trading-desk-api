@@ -15,6 +15,16 @@ COMMODITY_SYMBOLS = {
     "HO=F": "Heating Oil",
 }
 
+WTI_FALLBACK = 70  # default WTI price when data unavailable
+
+def calc_crack_spread(quotes: dict) -> tuple:
+    """Compute 3-2-1 crack spread from commodity quotes. Returns (crack_321, rb_per_bbl, ho_per_bbl, wti)."""
+    wti = quotes.get("CL=F", {}).get("price", WTI_FALLBACK)
+    rb  = quotes.get("RB=F", {}).get("price", 0) * 42
+    ho  = quotes.get("HO=F", {}).get("price", 0) * 42
+    crack_321 = (2 * rb + 1 * ho - 3 * wti) / 3
+    return crack_321, rb, ho, wti
+
 ENERGY_SECTOR_MAP = {
     "XOM": "Integrated", "CVX": "Integrated", "OXY": "Integrated", "MRO": "E&P",
     "COP": "E&P", "EOG": "E&P", "PXD": "E&P", "DVN": "E&P", "FANG": "E&P",
@@ -27,10 +37,7 @@ ENERGY_SECTOR_MAP = {
 def get_commodity_strip() -> list:
     quotes = get_quotes_batch(list(COMMODITY_SYMBOLS.keys()))
     result = []
-    rbob_per_barrel = quotes.get("RB=F", {}).get("price", 0) * 42
-    ho_per_barrel   = quotes.get("HO=F", {}).get("price", 0) * 42
-    wti_per_barrel  = quotes.get("CL=F", {}).get("price", 0)
-    crack_321 = (2 * rbob_per_barrel + 1 * ho_per_barrel - 3 * wti_per_barrel) / 3
+    crack_321, _, _, _ = calc_crack_spread(quotes)
 
     for sym, name in COMMODITY_SYMBOLS.items():
         q = quotes.get(sym, {"price": 0, "change": 0, "change_pct": 0})
@@ -57,10 +64,7 @@ def get_watchlist() -> list:
 
 def score_exposure() -> list:
     quotes = get_quotes_batch(["CL=F", "HO=F", "RB=F"] + ENERGY_TICKERS)
-    wti = quotes.get("CL=F", {}).get("price", 70)
-    ho  = quotes.get("HO=F", {}).get("price", 0) * 42
-    rb  = quotes.get("RB=F", {}).get("price", 0) * 42
-    crack = (2 * rb + 1 * ho - 3 * wti) / 3
+    crack, rb, ho, wti = calc_crack_spread(quotes)
 
     scored = []
     for ticker in ENERGY_TICKERS:

@@ -66,7 +66,7 @@ def _get_previous_baselines() -> tuple:
     """Fetch previous day's crack spread and WTI from ClickHouse. Falls back to static defaults."""
     try:
         rows = db.execute(
-            "SELECT spread_321 FROM crack_spreads FINAL ORDER BY timestamp DESC LIMIT 1"
+            "SELECT spread_321 FROM crack_spreads FINAL ORDER BY timestamp DESC LIMIT 1 OFFSET 1"
         )
         prev_crack = float(rows[0][0]) if rows else 25.0
         wti_rows = db.execute(

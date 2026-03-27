@@ -6,6 +6,7 @@ import json
 import logging
 from datetime import date, datetime
 from services.market_data import get_quotes_batch, get_quote
+from services.fear_service import _get_vix_term_spread
 from config import settings, DERIVATIVES_12
 import db
 
@@ -70,8 +71,7 @@ def get_rates() -> dict:
 def get_vol_summary() -> dict:
     vix = get_quote("^VIX")["price"]
     move = get_quote("^MOVE")["price"]
-    vixy = get_quote("VIXY")["price"]
-    ts_spread = (vixy - vix) / vix * 100 if vix else 0
+    ts_spread = _get_vix_term_spread(vix)
     structure = "Contango" if ts_spread > 2 else "Backwardation" if ts_spread < -2 else "Flat"
     return {
         "vix": vix, "move": move,

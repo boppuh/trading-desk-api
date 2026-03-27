@@ -114,40 +114,15 @@ def recompute_desk_note() -> dict:
     """Recompute all desk note sections and persist."""
     from services.trade_setups import generate_derivatives_setups
 
-    # Fetch shared quotes once to avoid redundant API calls
-    vol_quotes = get_quotes_batch(["^VIX", "^MOVE", "VIXY", "BTC-USD", "ETH-USD"])
-    vix = vol_quotes.get("^VIX", {"price": 0, "change": 0, "change_pct": 0})["price"]
-    move = vol_quotes.get("^MOVE", {"price": 0, "change": 0, "change_pct": 0})["price"]
-    vixy = vol_quotes.get("VIXY", {"price": 0, "change": 0, "change_pct": 0})["price"]
-    btc = vol_quotes.get("BTC-USD", {"price": 0, "change": 0, "change_pct": 0})
-    eth = vol_quotes.get("ETH-USD", {"price": 0, "change": 0, "change_pct": 0})
-
-    # Vol summary from shared quotes
-    ts_spread = (vixy - vix) / vix * 100 if vix else 0
-    structure = "Contango" if ts_spread > 2 else "Backwardation" if ts_spread < -2 else "Flat"
-    vol = {
-        "vix": vix, "move": move,
-        "ratio": round(vix / move, 3) if move else 0,
-        "structure": structure, "skew": "Bearish (5pt skew)",
-    }
-
-    # Crypto from shared quotes
-    funding = _fetch_binance_funding("BTCUSDT")
-    btc_price, eth_price = btc["price"], eth["price"]
-    crypto = {
-        "btc": f"${btc_price:,.0f}", "eth": f"${eth_price:,.0f}",
-        "ethBtcRatio": f"{eth_price/btc_price:.4f}" if btc_price else "N/A",
-        "basisAnn": "8.2%",
-        "fundingRate": f"{funding:+.3f}%" if funding is not None else "+0.012%",
-        "btcDominance": "52.4%",
-    }
+    vol = get_vol_summary()
+    crypto = get_crypto()
 
     note = {
         "scoreboard": get_scoreboard(),
         "rates": get_rates(),
         "vol": vol,
         "crypto": crypto,
-        "setups": generate_derivatives_setups(vix=vix, move=move, structure=vol["structure"]),
+        "setups": generate_derivatives_setups(vix=vol["vix"], move=vol["move"], structure=vol["structure"]),
         "macroContext": {},
         "timestamp": datetime.now().isoformat(),
     }

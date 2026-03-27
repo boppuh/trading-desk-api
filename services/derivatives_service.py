@@ -30,8 +30,6 @@ INSTRUMENT_META = {
 YF_SYMBOLS = ["ZT=F","ZF=F","ZN=F","ZB=F","ES=F","NQ=F","RTY=F","^VIX","^MOVE","DX-Y.NYB","BTC-USD","ETH-USD"]
 YF_MAPPING = dict(zip(DERIVATIVES_12, YF_SYMBOLS))
 
-# Polygon symbol mapping
-POLYGON_SYMBOLS = {id: meta["polygon_sym"] for id, meta in INSTRUMENT_META.items()}
 
 def get_scoreboard() -> list:
     """12-instrument scoreboard with last, change, QTD, volume, OI."""

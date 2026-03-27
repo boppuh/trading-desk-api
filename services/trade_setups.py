@@ -66,9 +66,8 @@ def generate_derivatives_setups(*, vix=None, move=None, structure=None) -> list:
                 move = vol["move"]
             if structure is None:
                 structure = vol["structure"]
-            ratio = vol["ratio"]
-        else:
-            ratio = round(vix / move, 3) if move else 0
+        # Always compute ratio from the final vix/move to stay consistent
+        ratio = round(vix / move, 3) if move else 0
     except Exception as e:
         logging.warning(f"Error fetching vol data for setups: {e}")
         vix, move, ratio, structure = 20, 100, 0.2, "Unknown"

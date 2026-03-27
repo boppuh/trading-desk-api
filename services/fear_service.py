@@ -100,7 +100,7 @@ def _fetch_hy_oas() -> float:
             timeout=5
         )
         obs = r.json()["observations"]
-        return float(obs[0]["value"]) * 100 if obs else 312.0
+        return float(obs[0]["value"]) * 100 if obs and obs[0]["value"] != "." else 312.0
     except Exception:
         return 312.0
 

@@ -1,7 +1,7 @@
 import logging
 from datetime import date
 from services.market_data import get_quotes_batch, get_quote
-from services.fear_service import get_fear_gauges, get_premarket_fear
+from services.fear_service import get_fear_gauges, _generate_assessment
 from services.vol_regime_service import get_latest_regime
 from scheduler import update_last_run
 import db
@@ -23,11 +23,11 @@ def run_close_pipeline():
         def change_pct(key):
             return quotes.get(SNAPSHOT_TICKERS[key], {}).get("change_pct", 0)
 
-        # Get regime + fear data
+        # Get regime + fear data (single gauges call to avoid duplicate API requests)
         regime = get_latest_regime()
-        fear = get_premarket_fear()
         gauges = get_fear_gauges()
         g = {item["name"]: item["value"] for item in gauges}
+        assessment = _generate_assessment(g.get("VIX", 0), g.get("MOVE", 0), g.get("Fear & Greed", 50))
 
         # Store daily snapshot
         db.insert("daily_snapshots",
@@ -36,7 +36,7 @@ def run_close_pipeline():
               0.0,  # put_call_ratio — requires separate data source
               price("hyg"), price("tlt"), price("uso"), price("gld"),
               regime.get("regime", ""), regime.get("regimeColor", ""),
-              fear.get("assessment", ""))],
+              assessment)],
             ["date", "spx_close", "qqq_close", "iwm_close", "dia_close",
              "vix_close", "vix_change_pct", "term_structure", "put_call_ratio",
              "hyg_close", "tlt_close", "uso_close", "gld_close",

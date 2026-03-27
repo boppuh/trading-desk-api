@@ -62,15 +62,31 @@ def get_watchlist() -> list:
         for t in ENERGY_TICKERS
     ]
 
+def _get_previous_baselines() -> tuple:
+    """Fetch previous day's crack spread and WTI from ClickHouse. Falls back to static defaults."""
+    try:
+        rows = db.execute(
+            "SELECT spread_321 FROM crack_spreads FINAL ORDER BY timestamp DESC LIMIT 1"
+        )
+        prev_crack = float(rows[0][0]) if rows else 25.0
+        wti_rows = db.execute(
+            "SELECT price FROM commodity_snapshots WHERE symbol='CL=F' ORDER BY timestamp DESC LIMIT 1 OFFSET 1"
+        )
+        prev_wti = float(wti_rows[0][0]) if wti_rows else 70.0
+        return prev_crack, prev_wti
+    except Exception:
+        return 25.0, 70.0
+
 def score_exposure() -> list:
     quotes = get_quotes_batch(["CL=F", "HO=F", "RB=F"] + ENERGY_TICKERS)
     crack, rb, ho, wti = calc_crack_spread(quotes)
+    prev_crack, prev_wti = _get_previous_baselines()
 
     scored = []
     for ticker in ENERGY_TICKERS:
         q = quotes.get(ticker, {"price": 0, "change_pct": 0})
         sector = ENERGY_SECTOR_MAP.get(ticker, "Energy")
-        score = _exposure_score(sector, crack, wti)
+        score = _exposure_score(sector, crack, wti, prev_crack, prev_wti)
         direction = "Long" if score >= 65 else "Short" if score <= 35 else "Watch"
         thesis = _exposure_thesis(ticker, sector, direction, crack, wti)
         scored.append({

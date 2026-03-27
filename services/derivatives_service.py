@@ -134,7 +134,7 @@ def _compute_qtd(instrument_id: str, current_price: float, anchor_date: str) -> 
     """Quarter-to-date return vs. QTD anchor date close."""
     try:
         rows = db.execute(
-            "SELECT price FROM universe_snapshots WHERE symbol=%(s)s AND toDate(timestamp)=%(d)s LIMIT 1",
+            "SELECT price FROM universe_snapshots WHERE symbol=%(s)s AND date=%(d)s LIMIT 1",
             {"s": instrument_id, "d": anchor_date}
         )
         if rows:

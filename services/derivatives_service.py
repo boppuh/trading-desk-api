@@ -57,13 +57,13 @@ def get_rates() -> dict:
     tips_10y = _fetch_fred_series("WFII10")
 
     return {
-        "fedFunds": f"{fed_funds:.2f}%" if fed_funds else "5.25%",
-        "sofr": f"{sofr:.2f}%" if sofr else "5.31%",
+        "fedFunds": f"{fed_funds:.2f}%" if fed_funds is not None else "5.25%",
+        "sofr": f"{sofr:.2f}%" if sofr is not None else "5.31%",
         "spread2s10s": _compute_curve_spread("DGS2", "DGS10"),
         "spread5s30s": _compute_curve_spread("DGS5", "DGS30"),
-        "cpi": f"{cpi:.1f}%" if cpi else "3.2%",
-        "ppi": f"{ppi:.1f}%" if ppi else "2.1%",
-        "inflationBreakeven": f"{tips_10y:.2f}%" if tips_10y else "2.34%",
+        "cpi": f"{cpi:.1f}%" if cpi is not None else "3.2%",
+        "ppi": f"{ppi:.1f}%" if ppi is not None else "2.1%",
+        "inflationBreakeven": f"{tips_10y:.2f}%" if tips_10y is not None else "2.34%",
         "fedwatch": fetch_fedwatch(),
     }
 

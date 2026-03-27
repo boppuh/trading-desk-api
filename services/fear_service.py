@@ -67,6 +67,8 @@ def get_premarket_fear() -> dict:
     }
 
 def _get_vix_term_spread(vix_spot: float) -> float:
+    if not vix_spot:
+        return 0.0
     vixy = get_quote("VIXY")["price"]
     return round((vixy - vix_spot) / vix_spot * 100, 2)
 

@@ -71,7 +71,7 @@ def get_vol_summary() -> dict:
     vix = get_quote("^VIX")["price"]
     move = get_quote("^MOVE")["price"]
     vixy = get_quote("VIXY")["price"]
-    ts_spread = (vixy - vix) / vix * 100
+    ts_spread = (vixy - vix) / vix * 100 if vix else 0
     structure = "Contango" if ts_spread > 2 else "Backwardation" if ts_spread < -2 else "Flat"
     return {
         "vix": vix, "move": move,

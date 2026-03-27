@@ -78,14 +78,9 @@ def _fetch_cnn_fear_greed() -> float:
         return 50.0  # neutral fallback
 
 def _fetch_aaii_bull_pct() -> float:
-    """AAII publishes weekly sentiment. Returns bull % from latest week."""
-    try:
-        r = httpx.get("https://www.aaii.com/files/surveys/sentiment.xls", timeout=10)
-        # Parse CSV-like data — AAII provides weekly CSV download
-        # Fallback: return cached/static value
-        return 41.3
-    except Exception:
-        return 41.3
+    """AAII publishes weekly sentiment. Returns bull % from latest week.
+    Stub — AAII XLS parsing not yet implemented."""
+    return 41.3
 
 def _fetch_naaim_exposure() -> float:
     """NAAIM Exposure Index — manager equity allocation 0-200."""

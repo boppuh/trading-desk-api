@@ -23,7 +23,9 @@ def run_energy_pipeline():
         ho  = quotes.get("HO=F", {}).get("price", 0) * 42
         rb  = quotes.get("RB=F", {}).get("price", 0) * 42
         crack = (2 * rb + 1 * ho - 3 * wti) / 3
-        db.insert("crack_spreads", [(ts, crack, ho - wti, ho - wti)],
+        jet_crack = rb - wti   # RBOB (jet fuel proxy) minus crude
+        diesel_crack = ho - wti  # Heating oil (diesel proxy) minus crude
+        db.insert("crack_spreads", [(ts, crack, jet_crack, diesel_crack)],
                   ["timestamp", "spread_321", "jet_crack_approx", "diesel_crack"])
 
         # Store exposure rankings

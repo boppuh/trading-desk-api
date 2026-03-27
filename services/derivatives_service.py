@@ -52,8 +52,8 @@ def get_rates() -> dict:
     """Fed Funds, SOFR, yield curve spreads, FedWatch, macro data."""
     sofr = _fetch_fred_series("SOFR")
     fed_funds = _fetch_fred_series("FEDFUNDS")
-    cpi = _fetch_fred_series("CPIAUCSL")
-    ppi = _fetch_fred_series("PPIACO")
+    cpi = _fetch_fred_series("CPALTT01USM657N")   # CPI YoY % change
+    ppi = _fetch_fred_series("PCEPI")              # PCE price index YoY proxy
     tips_10y = _fetch_fred_series("WFII10")
 
     return {

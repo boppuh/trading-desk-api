@@ -2,10 +2,9 @@
 Fear & macro gauge service. Shared between premarket and cockpit dashboards.
 Sources: FMP (VIX, MOVE), FRED (HY OAS), CNN Money (Fear & Greed), AAII, NAAIM
 """
-import httpx
 import logging
-from config import settings
 from services.market_data import get_quote
+from services.derivatives_service import _fetch_fred_series
 
 def get_fear_gauges() -> list:
     """Returns 7 fear gauge dicts matching cockpitData.fearGauges shape."""
@@ -27,8 +26,8 @@ def get_fear_gauges() -> list:
             "AAII Bull%": (35, 55), "NAAIM Exp.": (50, 100),
         }
         inverted = {
-            "Fear & Greed": (30, 50),      # <=30 extreme fear (red), >=50 neutral+ (green)
-            "VIX Term Sprd": (-1, 2),      # negative=backwardation (red), >2=contango (green)
+            "Fear & Greed": (30, 50),
+            "VIX Term Sprd": (-1, 2),
         }
         if name in inverted:
             lo, hi = inverted[name]
@@ -90,19 +89,9 @@ def _fetch_naaim_exposure() -> float:
 
 def _fetch_hy_oas() -> float:
     """High-yield option-adjusted spread from FRED BAMLH0A0HYM2."""
-    try:
-        if not settings.FRED_API_KEY:
-            return 312.0
-        r = httpx.get(
-            "https://api.stlouisfed.org/fred/series/observations",
-            params={"series_id": "BAMLH0A0HYM2", "api_key": settings.FRED_API_KEY,
-                    "limit": 1, "sort_order": "desc", "file_type": "json"},
-            timeout=5
-        )
-        obs = r.json()["observations"]
-        return float(obs[0]["value"]) * 100 if obs else 312.0
-    except Exception:
-        return 312.0
+    result = _fetch_fred_series("BAMLH0A0HYM2")
+    # BAMLH0A0HYM2 is reported in percent (e.g. 3.17 = 317 bps) — convert to basis points
+    return result * 100 if result is not None else 312.0
 
 def _regime_label(name, value) -> str:
     labels = {

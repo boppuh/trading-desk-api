@@ -82,6 +82,12 @@ def score_exposure() -> list:
     crack, rb, ho, wti = calc_crack_spread(quotes)
     prev_crack, prev_wti = _get_previous_baselines()
 
+    # Derive previous-day values from daily change to avoid hardcoded baselines
+    prev_wti  = wti - quotes.get("CL=F", {}).get("change", 0)
+    prev_ho   = (quotes.get("HO=F", {}).get("price", 0) - quotes.get("HO=F", {}).get("change", 0)) * 42
+    prev_rb   = (quotes.get("RB=F", {}).get("price", 0) - quotes.get("RB=F", {}).get("change", 0)) * 42
+    prev_crack = (2 * prev_rb + 1 * prev_ho - 3 * prev_wti) / 3
+
     scored = []
     for ticker in ENERGY_TICKERS:
         q = quotes.get(ticker, {"price": 0, "change_pct": 0})

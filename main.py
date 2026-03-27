@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from scheduler import start_scheduler, stop_scheduler
-from routers import vol_regime, premarket, energy, derivatives
+from routers import vol_regime, premarket, energy, derivatives, cockpit
 from config import settings
 
 logging.basicConfig(level=settings.LOG_LEVEL)
@@ -31,6 +31,7 @@ app.include_router(vol_regime.router, prefix="/api/vol", tags=["Vol Regime"])
 app.include_router(premarket.router, prefix="/api/premarket", tags=["Premarket"])
 app.include_router(energy.router, prefix="/api/energy", tags=["Energy"])
 app.include_router(derivatives.router, prefix="/api/derivatives", tags=["Derivatives"])
+app.include_router(cockpit.router, prefix="/api/cockpit", tags=["Cockpit"])
 
 class PipelineRequest(BaseModel):
     pipeline: str

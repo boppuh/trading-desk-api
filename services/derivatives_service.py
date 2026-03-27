@@ -3,7 +3,7 @@ Derivatives Desk service — 12-instrument scoreboard, rates, vol, crypto, desk 
 """
 import httpx
 import json
-import logging
+from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime
 from services.market_data import get_quotes_batch, get_quote
 from services.fear_service import _get_vix_term_spread
@@ -26,21 +26,21 @@ INSTRUMENT_META = {
     "ETH":  {"sector": "Crypto",   "dv01": None, "polygon_sym": "X:ETHUSD","qtd_anchor": "2026-01-01"},
 }
 
-# Polygon symbol mapping
-POLYGON_SYMBOLS = {id: meta["polygon_sym"] for id, meta in INSTRUMENT_META.items()}
+# yfinance symbol mapping for scoreboard and QTD lookups
+YF_SYMBOLS = ["ZT=F","ZF=F","ZN=F","ZB=F","ES=F","NQ=F","RTY=F","^VIX","^MOVE","DX-Y.NYB","BTC-USD","ETH-USD"]
+YF_MAPPING = dict(zip(DERIVATIVES_12, YF_SYMBOLS))
+
 
 def get_scoreboard() -> list:
     """12-instrument scoreboard with last, change, QTD, volume, OI."""
-    yf_symbols = ["ZT=F","ZF=F","ZN=F","ZB=F","ES=F","NQ=F","RTY=F","^VIX","^MOVE","DX-Y.NYB","BTC-USD","ETH-USD"]
-    quotes = get_quotes_batch(yf_symbols)
-    mapping = dict(zip(DERIVATIVES_12, yf_symbols))
+    quotes = get_quotes_batch(YF_SYMBOLS)
 
     rows = []
     for inst_id in DERIVATIVES_12:
-        sym = mapping[inst_id]
+        sym = YF_MAPPING[inst_id]
         q = quotes.get(sym, {"price": 0, "change": 0, "change_pct": 0})
         meta = INSTRUMENT_META[inst_id]
-        qtd = _compute_qtd(inst_id, q["price"], meta["qtd_anchor"])
+        qtd = _compute_qtd(sym, q["price"], meta["qtd_anchor"])
         rows.append({
             "instrument": inst_id, "sector": meta["sector"],
             "last": f"{q['price']:,.2f}", "change": f"{q['change']:+.2f}",
@@ -113,12 +113,16 @@ def assemble_desk_note() -> dict:
 def recompute_desk_note() -> dict:
     """Recompute all desk note sections and persist."""
     from services.trade_setups import generate_derivatives_setups
+
+    vol = get_vol_summary()
+    crypto = get_crypto()
+
     note = {
         "scoreboard": get_scoreboard(),
         "rates": get_rates(),
-        "vol": get_vol_summary(),
-        "crypto": get_crypto(),
-        "setups": generate_derivatives_setups(),
+        "vol": vol,
+        "crypto": crypto,
+        "setups": generate_derivatives_setups(vix=vol["vix"], move=vol["move"], structure=vol["structure"]),
         "macroContext": {},
         "timestamp": datetime.now().isoformat(),
     }
@@ -130,16 +134,21 @@ def recompute_desk_note() -> dict:
     )], ["trade_date", "scoreboard", "rates_data", "vol_data", "crypto_data", "setups", "macro_context"])
     return note
 
-def _compute_qtd(instrument_id: str, current_price: float, anchor_date: str) -> float:
+def _compute_qtd(yf_symbol: str, current_price: float, anchor_date: str) -> float:
     """Quarter-to-date return vs. QTD anchor date close."""
+    if not current_price:
+        return 0.0
     try:
-        rows = db.execute(
-            "SELECT price FROM universe_snapshots WHERE symbol=%(s)s AND date=%(d)s LIMIT 1",
-            {"s": instrument_id, "d": anchor_date}
-        )
-        if rows:
-            anchor = float(rows[0][0])
-            return (current_price - anchor) / anchor * 100
+        import yfinance as yf
+        ticker = yf.Ticker(yf_symbol)
+        from datetime import timedelta, datetime as dt
+        start = dt.strptime(anchor_date, "%Y-%m-%d")
+        end = start + timedelta(days=5)
+        hist = ticker.history(start=anchor_date, end=end.strftime("%Y-%m-%d"))
+        if not hist.empty:
+            anchor = float(hist["Close"].iloc[0])
+            if anchor:
+                return (current_price - anchor) / anchor * 100
     except Exception:
         pass
     return 0.0
@@ -165,7 +174,7 @@ def _compute_curve_spread(short_series: str, long_series: str) -> str:
     return "N/A"
 
 def fetch_fedwatch() -> list:
-    """FedWatch meeting probabilities — stub pending CME API integration."""
+    """Parse CME FedWatch meeting probabilities. Stub — replace with actual CME parse."""
     return [
         {"meeting": "May '26", "hold": 82, "cut25": 16, "cut50": 2},
         {"meeting": "Jun '26", "hold": 61, "cut25": 33, "cut50": 6},
